@@ -37,13 +37,6 @@ resource "hcloud_firewall" "default" {
 
   rule {
     direction  = "in"
-    protocol   = "tcp"
-    port       = "8080"
-    source_ips = ["0.0.0.0/0", "::/0"]
-  }
-
-  rule {
-    direction  = "in"
     protocol   = "icmp"
     source_ips = ["0.0.0.0/0", "::/0"]
   }
