@@ -1,0 +1,10 @@
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.lock.hcl
+terraform/terraform.tfvars
+.env
+*.tar.gz
+.DS_Store
+.idea/
+.claude/
