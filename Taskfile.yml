@@ -1,0 +1,123 @@
+version: "3"
+
+vars:
+  APP_NAME: hvac-boc
+  SERVER_IP: 5.161.46.138
+
+tasks:
+  # ── Dev ───────────────────────────────────────────────────────────────────
+  serve:
+    desc: Serve dashboard locally on http://localhost:8080
+    cmds:
+      - npx --yes serve -l 8080 dashboard/
+
+  serve:py:
+    desc: Serve dashboard locally via Python (no npm required)
+    cmds:
+      - python3 -m http.server 8080 --directory dashboard/
+
+  # ── Docker (local) ────────────────────────────────────────────────────────
+  docker:build:
+    desc: Build Docker image locally
+    cmds:
+      - docker build -t {{.APP_NAME}}:local .
+
+  docker:run:
+    desc: Run dashboard container locally on http://localhost:8080
+    cmds:
+      - docker run --rm -p 8080:80 --name {{.APP_NAME}} {{.APP_NAME}}:local
+
+  docker:stop:
+    desc: Stop and remove the local container
+    cmds:
+      - docker rm -f {{.APP_NAME}} || true
+
+  # ── Terraform / Hetzner ───────────────────────────────────────────────────
+  tf:setup:
+    desc: Copy tfvars example and run terraform init
+    dir: terraform
+    cmds:
+      - cp -n terraform.tfvars.example terraform.tfvars || true
+      - terraform init
+      - echo "Edit terraform/terraform.tfvars and set hcloud_token + ssh key paths"
+
+  tf:init:
+    desc: Initialize Terraform
+    dir: terraform
+    cmds:
+      - terraform init
+
+  tf:fmt:
+    desc: Format Terraform files
+    dir: terraform
+    cmds:
+      - terraform fmt -recursive
+
+  tf:validate:
+    desc: Validate Terraform configuration
+    dir: terraform
+    cmds:
+      - terraform validate
+
+  tf:plan:
+    desc: Show Terraform plan
+    dir: terraform
+    cmds:
+      - terraform plan
+
+  tf:apply:
+    desc: Provision / update Hetzner server and deploy dashboard
+    dir: terraform
+    cmds:
+      - terraform apply -auto-approve
+
+  tf:destroy:
+    desc: Destroy Hetzner server
+    dir: terraform
+    cmds:
+      - terraform destroy -auto-approve
+
+  tf:redeploy:
+    desc: Force re-deploy (rebuild image) without recreating the server
+    dir: terraform
+    cmds:
+      - terraform apply -replace=null_resource.deploy -auto-approve
+
+  tf:url:
+    desc: Print the dashboard URL
+    dir: terraform
+    cmds:
+      - terraform output -raw dashboard_url
+
+  # ── Shortcuts ─────────────────────────────────────────────────────────────
+  ssh:
+    desc: SSH into the Hetzner server
+    cmds:
+      - ssh -i ~/.ssh/claude-hvac root@{{.SERVER_IP}}
+
+  ssh:direct:
+    desc: SSH into the existing server at {{.SERVER_IP}}
+    cmds:
+      - ssh -i ~/.ssh/claude-hvac root@{{.SERVER_IP}}
+
+  logs:
+    desc: Tail nginx dashboard logs on the server
+    cmds:
+      - ssh -i ~/.ssh/claude-hvac root@{{.SERVER_IP}} "docker logs -f hvac-boc-dashboard-1"
+
+  deploy:
+    desc: Full deploy — terraform apply (provision + build + run)
+    cmds:
+      - task: tf:apply
+
+  destroy:
+    desc: Destroy Hetzner deployment
+    cmds:
+      - task: tf:destroy
+
+  # ── Database ──────────────────────────────────────────────────────────────
+  db:schema:
+    desc: Print the path to schema SQL for manual Supabase run
+    cmds:
+      - echo "Run in Supabase SQL editor — sql/schema.sql then sql/seed.sql"
+      - 'echo "Supabase project: https://supabase.com/dashboard/project/zkylrolpuwybsksspblj"'
