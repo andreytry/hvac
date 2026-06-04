@@ -114,6 +114,9 @@ function App(){
   const[editP,setEditP]=useState({});
   const[editC,setEditC]=useState({});
   const[saving,setSaving]=useState({});
+  const[notifEmail,setNotifEmail]=useState("");
+  const[notifEmailEdit,setNotifEmailEdit]=useState("");
+  const[notifSaving,setNotifSaving]=useState(false);
 
   const load=async()=>{
     setLoading(true);setErr(null);
@@ -121,9 +124,20 @@ function App(){
       const leadsP = TENANT_SLUG
         ? rpc("hvac_get_leads",{p_client_slug:TENANT_SLUG})
         : rpc("hvac_get_leads");
-      const[l,p,c]=await Promise.all([leadsP,rpc("hvac_get_pricing"),rpc("hvac_get_config")]);
-      setLeads(l||[]);setPricing(p||[]);setConfig(c||[]);
+      const requests = [leadsP,rpc("hvac_get_pricing"),rpc("hvac_get_config")];
+      if(TENANT_SLUG) requests.push(rpc("hvac_get_client",{p_slug:TENANT_SLUG}));
+      const results = await Promise.all(requests);
+      setLeads(results[0]||[]);setPricing(results[1]||[]);setConfig(results[2]||[]);
+      if(TENANT_SLUG && results[3]) { setNotifEmail(results[3].owner_email||""); }
     }catch(e){setErr(e.message)}finally{setLoading(false)}
+  };
+  const saveNotifEmail=async()=>{
+    if(!TENANT_SLUG||!notifEmailEdit) return;
+    setNotifSaving(true);
+    try{
+      await rpc("hvac_update_client_email",{p_slug:TENANT_SLUG,p_email:notifEmailEdit});
+      setNotifEmail(notifEmailEdit);setNotifEmailEdit("");
+    }catch(e){alert(e.message)}finally{setNotifSaving(false)}
   };
   useEffect(()=>{load()},[]);
 
@@ -240,7 +254,20 @@ function App(){
             {tab==="settings"&&(
               <>
                 <div style={{color:"#64748b",fontSize:"10px",letterSpacing:"3px",marginBottom:"18px"}}>SYSTEM CONFIGURATION</div>
+                {TENANT_SLUG&&(
+                  <div style={{...S.card(notifEmailEdit!=="",ac),padding:"15px 16px",marginBottom:"10px"}}>
+                    <div style={{...S.lbl,marginBottom:"4px"}}>NOTIFICATION EMAIL</div>
+                    <div style={{color:"#64748b",fontSize:"11px",marginBottom:"8px"}}>Lead confirmation emails are sent to this address after every call.</div>
+                    <div style={{color:"#475569",fontSize:"12px",marginBottom:"8px"}}>Current: <strong style={{color:"#e2e8f0"}}>{notifEmail||"—"}</strong></div>
+                    <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
+                      <input style={S.inp} value={notifEmailEdit} onChange={ev=>setNotifEmailEdit(ev.target.value)} placeholder="Enter new email address..."/>
+                      {notifEmailEdit&&<button style={{...S.save,background:ac,opacity:notifSaving?0.5:1}} disabled={notifSaving} onClick={saveNotifEmail}>{notifSaving?"...":"SAVE"}</button>}
+                    </div>
+                    <div style={{color:"#64748b",fontSize:"10px",marginTop:"6px",letterSpacing:"1px"}}>CHANGES TAKE EFFECT IMMEDIATELY</div>
+                  </div>
+                )}
                 {config.map(row=>{
+
                   const dirty=editC[row.key]!==undefined;
                   return(
                     <div key={row.key} style={{...S.card(dirty,ac),padding:"15px 16px",marginBottom:"10px"}}>
