@@ -17,16 +17,48 @@
 <script type="text/babel">
 const SUPABASE_URL="https://zkylrolpuwybsksspblj.supabase.co";
 const ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWxyb2xwdXd5YnNrc3NwYmxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTgwOTIsImV4cCI6MjA5NDQ5NDA5Mn0.xXfcM2u1FrZZujo-1KNnLGkPSkaoRGkjgk7KreB1TPM";
-const rpc=async(fn,p={})=>{const r=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`,{method:"POST",headers:{"Content-Type":"application/json","apikey":ANON_KEY,"Authorization":`Bearer ${ANON_KEY}`},body:JSON.stringify(p)});if(!r.ok)throw new Error(await r.text());return r.json()};
+
+// ── Tenant config ──────────────────────────────────────────────────────
+const TENANTS = {
+  south_flow_air: {
+    name: "South Flow Air",
+    slug: "south_flow_air",
+    phone: "+1 (786) 699-8690",
+    color: "#f59e0b"
+  },
+  cool_solution_services: {
+    name: "Cool Solution Services",
+    slug: "cool_solution_services",
+    phone: "+1 (786) 534-6206",
+    color: "#10b981"
+  }
+};
+
+// Read ?tenant= from URL
+const params = new URLSearchParams(window.location.search);
+const TENANT_SLUG = params.get("tenant");
+const TENANT = TENANT_SLUG ? TENANTS[TENANT_SLUG] : null;
+if (TENANT) document.title = TENANT.name + " · BOC";
+
+const rpc=async(fn,p={})=>{
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`,{
+    method:"POST",
+    headers:{"Content-Type":"application/json","apikey":ANON_KEY,"Authorization":`Bearer ${ANON_KEY}`},
+    body:JSON.stringify(p)
+  });
+  if(!r.ok)throw new Error(await r.text());
+  return r.json();
+};
+
 const S={
   app:{fontFamily:"'Courier New',monospace",background:"#080b12",minHeight:"100vh",color:"#e2e8f0"},
   hdr:{background:"#0d1117",borderBottom:"1px solid #1a2535",padding:"14px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:100},
-  logo:{color:"#f59e0b",fontSize:"12px",letterSpacing:"4px",fontWeight:700},
+  logo:(c)=>({color:c||"#f59e0b",fontSize:"12px",letterSpacing:"4px",fontWeight:700}),
   sub:{color:"#64748b",fontSize:"10px",letterSpacing:"2px"},
   tabs:{display:"flex",background:"#0a0e17",borderBottom:"1px solid #1a2535"},
-  tab:(a)=>({padding:"13px 22px",fontSize:"10px",letterSpacing:"2px",textTransform:"uppercase",fontWeight:700,border:"none",cursor:"pointer",background:"transparent",fontFamily:"inherit",color:a?"#f59e0b":"#64748b",borderBottom:a?"2px solid #f59e0b":"2px solid transparent"}),
+  tab:(a,c)=>({padding:"13px 22px",fontSize:"10px",letterSpacing:"2px",textTransform:"uppercase",fontWeight:700,border:"none",cursor:"pointer",background:"transparent",fontFamily:"inherit",color:a?(c||"#f59e0b"):"#64748b",borderBottom:a?`2px solid ${c||"#f59e0b"}`:"2px solid transparent"}),
   body:{padding:"20px",maxWidth:"860px",margin:"0 auto"},
-  card:(h)=>({background:"#0d1117",border:`1px solid ${h?"#f59e0b":"#1a2535"}`,borderRadius:"8px",marginBottom:"10px",overflow:"hidden"}),
+  card:(h,c)=>({background:"#0d1117",border:`1px solid ${h?(c||"#f59e0b"):"#1a2535"}`,borderRadius:"8px",marginBottom:"10px",overflow:"hidden"}),
   cHdr:{padding:"15px 16px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:"12px"},
   cBdy:{borderTop:"1px solid #1a2535",padding:"16px",background:"#060810"},
   lbl:{color:"#4895c2",fontSize:"10px",letterSpacing:"2px",marginBottom:"3px"},
@@ -38,14 +70,39 @@ const S={
   err:{background:"#130a0a",border:"1px solid #450a0a",borderRadius:"6px",padding:"14px",color:"#fca5a5",fontSize:"12px",marginBottom:"16px"},
   empty:{textAlign:"center",padding:"80px 20px",color:"#1e2d40",fontSize:"12px",letterSpacing:"3px"},
   fbar:{display:"flex",gap:"6px",marginBottom:"18px",flexWrap:"wrap"},
-  fbtn:(a)=>({padding:"5px 12px",fontSize:"10px",letterSpacing:"1px",borderRadius:"3px",border:"1px solid",cursor:"pointer",fontFamily:"inherit",background:a?"#f59e0b":"transparent",color:a?"#000":"#475569",borderColor:a?"#f59e0b":"#1a2535"}),
+  fbtn:(a,c)=>({padding:"5px 12px",fontSize:"10px",letterSpacing:"1px",borderRadius:"3px",border:"1px solid",cursor:"pointer",fontFamily:"inherit",background:a?(c||"#f59e0b"):"transparent",color:a?"#000":"#475569",borderColor:a?(c||"#f59e0b"):"#1a2535"}),
 };
 const SBADGE={new:{bg:"#172554",text:"#93c5fd"},contacted:{bg:"#431407",text:"#fdba74"},scheduled:{bg:"#2e1065",text:"#c4b5fd"},won:{bg:"#052e16",text:"#86efac"},lost:{bg:"#450a0a",text:"#fca5a5"}};
 const QCOL={qualified:"#10b981",needs_review:"#f59e0b",unqualified:"#ef4444"};
 const fmt=n=>n!=null?`$${Number(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}`:"—";
 const fmtD=d=>d?new Date(d).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"2-digit"}):"—";
 const {useState,useEffect}=React;
+
+// ── Tenant selector (shown when no ?tenant= param) ────────────────────
+function TenantSelector(){
+  return(
+    <div style={{...S.app,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh"}}>
+      <div style={{fontSize:"10px",letterSpacing:"6px",color:"#64748b",marginBottom:"40px"}}>SELECT TENANT</div>
+      <div style={{display:"flex",flexDirection:"column",gap:"16px",width:"320px"}}>
+        {Object.values(TENANTS).map(t=>(
+          <a key={t.slug} href={`?tenant=${t.slug}`} style={{textDecoration:"none"}}>
+            <div style={{background:"#0d1117",border:`1px solid ${t.color}22`,borderRadius:"10px",padding:"20px 24px",cursor:"pointer",transition:"border-color 0.2s"}}
+              onMouseEnter={e=>e.currentTarget.style.borderColor=t.color}
+              onMouseLeave={e=>e.currentTarget.style.borderColor=`${t.color}22`}>
+              <div style={{color:t.color,fontSize:"13px",fontWeight:700,letterSpacing:"2px",marginBottom:"6px"}}>{t.name.toUpperCase()}</div>
+              <div style={{color:"#475569",fontSize:"10px",letterSpacing:"1px"}}>{t.phone}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+      <div style={{marginTop:"48px",fontSize:"10px",color:"#1e2d40",letterSpacing:"2px"}}>AI PROCESS · HVAC BOC</div>
+    </div>
+  );
+}
+
+// ── Main dashboard ────────────────────────────────────────────────────
 function App(){
+  const ac=TENANT?.color||"#f59e0b";
   const[tab,setTab]=useState("leads");
   const[leads,setLeads]=useState([]);
   const[pricing,setPricing]=useState([]);
@@ -57,26 +114,47 @@ function App(){
   const[editP,setEditP]=useState({});
   const[editC,setEditC]=useState({});
   const[saving,setSaving]=useState({});
-  const load=async()=>{setLoading(true);setErr(null);try{const[l,p,c]=await Promise.all([rpc("hvac_get_leads"),rpc("hvac_get_pricing"),rpc("hvac_get_config")]);setLeads(l||[]);setPricing(p||[]);setConfig(c||[])}catch(e){setErr(e.message)}finally{setLoading(false)}};
+
+  const load=async()=>{
+    setLoading(true);setErr(null);
+    try{
+      const leadsP = TENANT_SLUG
+        ? rpc("hvac_get_leads",{p_client_slug:TENANT_SLUG})
+        : rpc("hvac_get_leads");
+      const[l,p,c]=await Promise.all([leadsP,rpc("hvac_get_pricing"),rpc("hvac_get_config")]);
+      setLeads(l||[]);setPricing(p||[]);setConfig(c||[]);
+    }catch(e){setErr(e.message)}finally{setLoading(false)}
+  };
   useEffect(()=>{load()},[]);
+
   const setStatus=async(id,status)=>{setSaving(s=>({...s,[id]:true}));try{await rpc("hvac_update_lead_status",{p_id:id,p_status:status});setLeads(ls=>ls.map(l=>l.id===id?{...l,status}:l))}catch(e){alert(e.message)}finally{setSaving(s=>({...s,[id]:false}))}};
   const saveP=async(row)=>{const k=`p${row.id}`;setSaving(s=>({...s,[k]:true}));try{const e=editP[row.id]||{};await rpc("hvac_update_pricing",{p_id:row.id,p_service_name:e.service_name??row.service_name,p_category:e.category??row.category,p_unit:e.unit??row.unit,p_price_min:parseFloat(e.price_min??row.price_min),p_price_max:parseFloat(e.price_max??row.price_max),p_active:e.active??row.active,p_notes:e.notes??row.notes});setPricing(ps=>ps.map(p=>p.id===row.id?{...p,...e}:p));setEditP(ep=>{const n={...ep};delete n[row.id];return n})}catch(e){alert(e.message)}finally{setSaving(s=>({...s,[k]:false}))}};
   const saveC=async(key)=>{const k=`c${key}`;setSaving(s=>({...s,[k]:true}));try{const val=editC[key];await rpc("hvac_update_config",{p_key:key,p_value:val});setConfig(cs=>cs.map(c=>c.key===key?{...c,value:val}:c));setEditC(ec=>{const n={...ec};delete n[key];return n})}catch(e){alert(e.message)}finally{setSaving(s=>({...s,[k]:false}))}};
+
   const filtered=filter==="all"?leads:leads.filter(l=>l.status===filter);
   const statusCounts=leads.reduce((acc,l)=>{acc[l.status]=(acc[l.status]||0)+1;return acc},{});
+
   return(
     <div style={S.app}>
       <div style={S.hdr}>
-        <div><div style={S.logo}>▣ HVAC BOC</div><div style={S.sub}>OPERATIONS CENTER</div></div>
+        <div style={{display:"flex",alignItems:"center",gap:"16px"}}>
+          <div>
+            <div style={S.logo(ac)}>▣ {TENANT?TENANT.name.toUpperCase():"HVAC BOC"}</div>
+            <div style={S.sub}>{TENANT?`${TENANT.phone} · `:""}{TENANT_SLUG?.toUpperCase().replace(/_/g," ")||"OPERATIONS CENTER"}</div>
+          </div>
+          {TENANT&&(
+            <a href="/" style={{color:"#1e2d40",fontSize:"10px",textDecoration:"none",letterSpacing:"1px",border:"1px solid #1a2535",padding:"3px 8px",borderRadius:"3px"}}>← ALL</a>
+          )}
+        </div>
         <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
-          <div style={{width:7,height:7,borderRadius:"50%",background:"#10b981",boxShadow:"0 0 10px #10b981"}}/>
+          <div style={{width:7,height:7,borderRadius:"50%",background:ac,boxShadow:`0 0 10px ${ac}`}}/>
           <span style={{color:"#64748b",fontSize:"10px",letterSpacing:"1px"}}>LIVE</span>
           <button onClick={load} style={{background:"none",border:"1px solid #1a2535",color:"#475569",padding:"5px 10px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",letterSpacing:"1px",fontFamily:"inherit"}}>↺ SYNC</button>
         </div>
       </div>
       <div style={S.tabs}>
         {[["leads",`ORDERS (${leads.length})`],["pricing","PRICING"],["settings","SETTINGS"]].map(([id,lbl])=>(
-          <button key={id} style={S.tab(tab===id)} onClick={()=>setTab(id)}>{lbl}</button>
+          <button key={id} style={S.tab(tab===id,ac)} onClick={()=>setTab(id)}>{lbl}</button>
         ))}
       </div>
       <div style={S.body}>
@@ -87,26 +165,28 @@ function App(){
               <>
                 <div style={S.fbar}>
                   {[["all",`ALL (${leads.length})`],["new",`NEW (${statusCounts.new||0})`],["contacted",`CONTACTED (${statusCounts.contacted||0})`],["scheduled",`SCHEDULED (${statusCounts.scheduled||0})`],["won",`WON (${statusCounts.won||0})`],["lost",`LOST (${statusCounts.lost||0})`]].map(([s,l])=>(
-                    <button key={s} style={S.fbtn(filter===s)} onClick={()=>setFilter(s)}>{l}</button>
+                    <button key={s} style={S.fbtn(filter===s,ac)} onClick={()=>setFilter(s)}>{l}</button>
                   ))}
                 </div>
                 {filtered.length===0?<div style={S.empty}>NO ORDERS</div>:filtered.map(lead=>(
-                  <div key={lead.id} style={S.card(exp===lead.id)}>
+                  <div key={lead.id} style={S.card(exp===lead.id,ac)}>
                     <div style={S.cHdr} onClick={()=>setExp(exp===lead.id?null:lead.id)}>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{display:"flex",alignItems:"center",gap:"8px",flexWrap:"wrap",marginBottom:"8px"}}>
                           <span style={{color:"#e2e8f0",fontWeight:700,fontSize:"14px"}}>{lead.contact_name||"Unknown Caller"}</span>
                           {SBADGE[lead.status]&&<span style={{fontSize:"10px",letterSpacing:"1px",padding:"2px 8px",borderRadius:"3px",...SBADGE[lead.status]}}>{(lead.status||"new").toUpperCase()}</span>}
                           <span style={{fontSize:"10px",color:QCOL[lead.qualification_status]||"#64748b"}}>● {(lead.qualification_status||"pending").replace("_"," ").toUpperCase()}</span>
+                          {lead.language&&lead.language!=="en"&&<span style={{fontSize:"10px",color:"#64748b"}}>{lead.language==="es"?"🇪🇸":lead.language==="pt"?"🇧🇷":lead.language==="fr"?"🇫🇷":"🌐"}</span>}
                         </div>
                         <div style={{display:"flex",gap:"14px",flexWrap:"wrap"}}>
                           <span style={{color:"#475569",fontSize:"12px"}}>☎ {lead.phone||"—"}</span>
-                          <span style={{color:"#475569",fontSize:"12px"}}>@ {lead.email||"—"}</span>
+                          {lead.availability&&<span style={{color:"#475569",fontSize:"12px"}}>🕐 {lead.availability}</span>}
                           {lead.service_requested&&<span style={{color:"#64748b",fontSize:"12px"}}>⚡ {lead.service_requested}</span>}
+                          {lead.urgency==="emergency"&&<span style={{color:"#ef4444",fontSize:"10px",letterSpacing:"1px"}}>🚨 EMERGENCY</span>}
                         </div>
                       </div>
                       <div style={{textAlign:"right",flexShrink:0}}>
-                        {lead.estimate_low!=null&&<div style={{color:"#f59e0b",fontWeight:700,fontSize:"15px"}}>{fmt(lead.estimate_low)}–{fmt(lead.estimate_high)}</div>}
+                        {lead.estimate_low!=null&&<div style={{color:ac,fontWeight:700,fontSize:"15px"}}>{fmt(lead.estimate_low)}–{fmt(lead.estimate_high)}</div>}
                         <div style={{color:"#64748b",fontSize:"10px",marginTop:"4px"}}>{fmtD(lead.created_at)}</div>
                         <div style={{color:"#64748b",fontSize:"10px",marginTop:"2px"}}>{exp===lead.id?"▲":"▼"}</div>
                       </div>
@@ -114,11 +194,11 @@ function App(){
                     {exp===lead.id&&(
                       <div style={S.cBdy}>
                         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px",marginBottom:"16px"}}>
-                          {[["PHONE",lead.phone],["EMAIL",lead.email],["SOURCE",lead.source],["URGENCY",lead.urgency],["PROPERTY",lead.property_type||"—"],["SYSTEM AGE",lead.system_age_years!=null?`${lead.system_age_years} yrs`:"—"],["PUSH EMAIL",lead.push_to_email||"—"],["ESTIMATE",lead.estimate_low!=null?`${fmt(lead.estimate_low)} – ${fmt(lead.estimate_high)}`:"—"],["QUAL NOTE",lead.qualification_reason||"—"]].map(([k,v])=>(
+                          {[["PHONE",lead.phone],["URGENCY",lead.urgency],["SOURCE",lead.source],["PROPERTY",lead.property_type||"—"],["AVAILABILITY",lead.availability||"—"],["LANGUAGE",lead.language||"en"],["ESTIMATE",lead.estimate_low!=null?`${fmt(lead.estimate_low)} – ${fmt(lead.estimate_high)}`:"—"],["QUAL NOTE",lead.qualification_reason||"—"]].map(([k,v])=>(
                             <div key={k}><div style={S.lbl}>{k}</div><div style={S.val}>{v}</div></div>
                           ))}
                         </div>
-                        {lead.description&&<div style={{marginBottom:"16px"}}><div style={S.lbl}>NOTES</div><div style={{...S.val,background:"#0d1117",border:"1px solid #1a2535",padding:"10px",borderRadius:"4px",marginTop:"4px"}}>{lead.description}</div></div>}
+                        {lead.description&&<div style={{marginBottom:"16px"}}><div style={S.lbl}>DESCRIPTION</div><div style={{...S.val,background:"#0d1117",border:"1px solid #1a2535",padding:"10px",borderRadius:"4px",marginTop:"4px"}}>{lead.description}</div></div>}
                         <div><div style={{...S.lbl,marginBottom:"8px"}}>UPDATE STATUS</div>
                           <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
                             {["new","contacted","scheduled","won","lost"].map(s=>(
@@ -138,7 +218,7 @@ function App(){
                 {pricing.map(row=>{
                   const e=editP[row.id]||{};const dirty=Object.keys(e).length>0;const active=e.active??row.active;
                   return(
-                    <div key={row.id} style={{...S.card(dirty),padding:"15px 16px",opacity:active?1:0.5}}>
+                    <div key={row.id} style={{...S.card(dirty,ac),padding:"15px 16px",opacity:active?1:0.5}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"12px",gap:"10px"}}>
                         <div style={{flex:1}}>
                           <input value={e.service_name??row.service_name} onChange={ev=>setEditP(ep=>({...ep,[row.id]:{...ep[row.id],service_name:ev.target.value}}))} style={{background:"transparent",border:"none",color:"#e2e8f0",fontSize:"14px",fontWeight:700,fontFamily:"inherit",width:"100%",outline:"none",padding:0}}/>
@@ -163,7 +243,7 @@ function App(){
                 {config.map(row=>{
                   const dirty=editC[row.key]!==undefined;
                   return(
-                    <div key={row.key} style={{...S.card(dirty),padding:"15px 16px",marginBottom:"10px"}}>
+                    <div key={row.key} style={{...S.card(dirty,ac),padding:"15px 16px",marginBottom:"10px"}}>
                       <div style={{...S.lbl,marginBottom:"4px"}}>{row.key.toUpperCase().replace(/_/g," ")}</div>
                       {row.description&&<div style={{color:"#64748b",fontSize:"11px",marginBottom:"8px"}}>{row.description}</div>}
                       <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
@@ -182,7 +262,13 @@ function App(){
     </div>
   );
 }
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+
+// ── Entry point ───────────────────────────────────────────────────────
+function Root(){
+  if(!TENANT_SLUG || !TENANTS[TENANT_SLUG]) return <TenantSelector/>;
+  return <App/>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
 </script>
 </body>
 </html>
