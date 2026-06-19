@@ -4,9 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>HVAC BOC</title>
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Courier New',monospace;background:#080b12;color:#e2e8f0;min-height:100vh}
@@ -15,7 +15,7 @@
 <body>
 <div id="root"></div>
 <script>window.addEventListener("error",function(e){var r=document.getElementById("root");if(r&&r.children.length===0){r.innerHTML="<pre style=\"color:#f87171;padding:24px;white-space:pre-wrap;font-family:monospace\">DASHBOARD ERROR:\n"+((e&&e.message)||e)+"\n\nIf you see this, the page loaded but the app threw. Screenshot this.</pre>";}});window.addEventListener("unhandledrejection",function(e){var r=document.getElementById("root");if(r&&r.children.length===0){r.innerHTML="<pre style=\"color:#fbbf24;padding:24px;white-space:pre-wrap;font-family:monospace\">DATA LOAD FAILED:\n"+((e&&e.reason&&e.reason.message)||e.reason||e)+"</pre>";}});</script>
-<script type="text/babel" data-presets="react,env">
+<script type="text/babel" data-presets="react" data-type="script">
 const SUPABASE_URL="https://zkylrolpuwybsksspblj.supabase.co";
 const ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWxyb2xwdXd5YnNrc3NwYmxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTgwOTIsImV4cCI6MjA5NDQ5NDA5Mn0.xXfcM2u1FrZZujo-1KNnLGkPSkaoRGkjgk7KreB1TPM";
 
