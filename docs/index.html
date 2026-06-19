@@ -14,7 +14,8 @@
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
+<script>window.addEventListener("error",function(e){var r=document.getElementById("root");if(r&&r.children.length===0){r.innerHTML="<pre style=\"color:#f87171;padding:24px;white-space:pre-wrap;font-family:monospace\">DASHBOARD ERROR:\n"+((e&&e.message)||e)+"\n\nIf you see this, the page loaded but the app threw. Screenshot this.</pre>";}});window.addEventListener("unhandledrejection",function(e){var r=document.getElementById("root");if(r&&r.children.length===0){r.innerHTML="<pre style=\"color:#fbbf24;padding:24px;white-space:pre-wrap;font-family:monospace\">DATA LOAD FAILED:\n"+((e&&e.reason&&e.reason.message)||e.reason||e)+"</pre>";}});</script>
+<script type="text/babel" data-presets="react,env">
 const SUPABASE_URL="https://zkylrolpuwybsksspblj.supabase.co";
 const ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWxyb2xwdXd5YnNrc3NwYmxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTgwOTIsImV4cCI6MjA5NDQ5NDA5Mn0.xXfcM2u1FrZZujo-1KNnLGkPSkaoRGkjgk7KreB1TPM";
 
