@@ -6,7 +6,6 @@
 <title>HVAC BOC</title>
 <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Courier New',monospace;background:#080b12;color:#e2e8f0;min-height:100vh}
@@ -15,11 +14,10 @@
 <body>
 <div id="root"></div>
 <script>window.addEventListener("error",function(e){var r=document.getElementById("root");if(r&&r.children.length===0){r.innerHTML="<pre style=\"color:#f87171;padding:24px;white-space:pre-wrap;font-family:monospace\">DASHBOARD ERROR:\n"+((e&&e.message)||e)+"\n\nIf you see this, the page loaded but the app threw. Screenshot this.</pre>";}});window.addEventListener("unhandledrejection",function(e){var r=document.getElementById("root");if(r&&r.children.length===0){r.innerHTML="<pre style=\"color:#fbbf24;padding:24px;white-space:pre-wrap;font-family:monospace\">DATA LOAD FAILED:\n"+((e&&e.reason&&e.reason.message)||e.reason||e)+"</pre>";}});</script>
-<script type="text/babel" data-presets="react" data-type="script">
-const SUPABASE_URL="https://zkylrolpuwybsksspblj.supabase.co";
-const ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWxyb2xwdXd5YnNrc3NwYmxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTgwOTIsImV4cCI6MjA5NDQ5NDA5Mn0.xXfcM2u1FrZZujo-1KNnLGkPSkaoRGkjgk7KreB1TPM";
-
-// ── Tenant config ──────────────────────────────────────────────────────
+<script>
+import { jsxDEV as _jsxDEV, Fragment as _Fragment } from "react/jsx-dev-runtime";
+const SUPABASE_URL = "https://zkylrolpuwybsksspblj.supabase.co";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpreWxyb2xwdXd5YnNrc3NwYmxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5MTgwOTIsImV4cCI6MjA5NDQ5NDA5Mn0.xXfcM2u1FrZZujo-1KNnLGkPSkaoRGkjgk7KreB1TPM";
 const TENANTS = {
   south_flow_air: {
     name: "South Flow Air",
@@ -34,292 +32,1067 @@ const TENANTS = {
     color: "#10b981"
   }
 };
-
-// Read ?tenant= from URL
 const params = new URLSearchParams(window.location.search);
 const TENANT_SLUG = params.get("tenant");
 const TENANT = TENANT_SLUG ? TENANTS[TENANT_SLUG] : null;
 if (TENANT) document.title = TENANT.name + " · BOC";
-
-const rpc=async(fn,p={})=>{
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`,{
-    method:"POST",
-    headers:{"Content-Type":"application/json","apikey":ANON_KEY,"Authorization":`Bearer ${ANON_KEY}`},
-    body:JSON.stringify(p)
+const rpc = async (fn, p = {}) => {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": ANON_KEY,
+      "Authorization": `Bearer ${ANON_KEY}`
+    },
+    body: JSON.stringify(p)
   });
-  if(!r.ok)throw new Error(await r.text());
-  const text=await r.text();
-  return text?JSON.parse(text):null;
+  if (!r.ok) throw new Error(await r.text());
+  const text = await r.text();
+  return text ? JSON.parse(text) : null;
 };
-
-const S={
-  app:{fontFamily:"'Courier New',monospace",background:"#080b12",minHeight:"100vh",color:"#e2e8f0"},
-  hdr:{background:"#0d1117",borderBottom:"1px solid #1a2535",padding:"14px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:100},
-  logo:(c)=>({color:c||"#10b981",fontSize:"12px",letterSpacing:"4px",fontWeight:700}),
-  sub:{color:"#94a3b8",fontSize:"10px",letterSpacing:"2px"},
-  tabs:{display:"flex",background:"#0a0e17",borderBottom:"1px solid #1a2535"},
-  tab:(a,c)=>({padding:"13px 22px",fontSize:"10px",letterSpacing:"2px",textTransform:"uppercase",fontWeight:700,border:"none",cursor:"pointer",background:"transparent",fontFamily:"inherit",color:a?(c||"#10b981"):"#64748b",borderBottom:a?`2px solid ${c||"#10b981"}`:"2px solid transparent"}),
-  body:{padding:"20px",maxWidth:"860px",margin:"0 auto"},
-  card:(h,c)=>({background:"#0d1117",border:`1px solid ${h?(c||"#10b981"):"#1a2535"}`,borderRadius:"8px",marginBottom:"10px",overflow:"hidden"}),
-  cHdr:{padding:"15px 16px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:"12px"},
-  cBdy:{borderTop:"1px solid #1a2535",padding:"16px",background:"#060810"},
-  lbl:{color:"#4895c2",fontSize:"10px",letterSpacing:"2px",marginBottom:"3px"},
-  val:{color:"#cbd5e1",fontSize:"12px"},
-  inp:{background:"#0d1117",border:"1px solid #1a2535",color:"#e2e8f0",padding:"8px 12px",borderRadius:"4px",fontSize:"12px",fontFamily:"inherit",outline:"none",width:"100%"},
-  num:{background:"#0d1117",border:"1px solid #1a2535",color:"#10b981",padding:"7px 10px",borderRadius:"4px",width:"90px",fontSize:"13px",fontFamily:"inherit",outline:"none"},
-  btn:(a)=>({padding:"7px 16px",background:a?"#10b981":"transparent",color:a?"#000":"#94a3b8",border:"1px solid",borderColor:a?"#10b981":"#1a2535",borderRadius:"4px",cursor:"pointer",fontSize:"10px",letterSpacing:"2px",fontWeight:700,fontFamily:"inherit"}),
-  save:{padding:"8px 18px",background:"#10b981",color:"#000",border:"none",borderRadius:"4px",cursor:"pointer",fontSize:"10px",letterSpacing:"2px",fontWeight:700,fontFamily:"inherit",flexShrink:0},
-  err:{background:"#130a0a",border:"1px solid #450a0a",borderRadius:"6px",padding:"14px",color:"#fca5a5",fontSize:"12px",marginBottom:"16px"},
-  empty:{textAlign:"center",padding:"80px 20px",color:"#94a3b8",fontSize:"12px",letterSpacing:"3px"},
-  fbar:{display:"flex",gap:"6px",marginBottom:"18px",flexWrap:"wrap"},
-  fbtn:(a,c)=>({padding:"5px 12px",fontSize:"10px",letterSpacing:"1px",borderRadius:"3px",border:"1px solid",cursor:"pointer",fontFamily:"inherit",background:a?(c||"#10b981"):"transparent",color:a?"#000":"#94a3b8",borderColor:a?(c||"#10b981"):"#1a2535"}),
+const S = {
+  app: {
+    fontFamily: "'Courier New',monospace",
+    background: "#080b12",
+    minHeight: "100vh",
+    color: "#e2e8f0"
+  },
+  hdr: {
+    background: "#0d1117",
+    borderBottom: "1px solid #1a2535",
+    padding: "14px 20px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    position: "sticky",
+    top: 0,
+    zIndex: 100
+  },
+  logo: c => ({
+    color: c || "#10b981",
+    fontSize: "12px",
+    letterSpacing: "4px",
+    fontWeight: 700
+  }),
+  sub: {
+    color: "#94a3b8",
+    fontSize: "10px",
+    letterSpacing: "2px"
+  },
+  tabs: {
+    display: "flex",
+    background: "#0a0e17",
+    borderBottom: "1px solid #1a2535"
+  },
+  tab: (a, c) => ({
+    padding: "13px 22px",
+    fontSize: "10px",
+    letterSpacing: "2px",
+    textTransform: "uppercase",
+    fontWeight: 700,
+    border: "none",
+    cursor: "pointer",
+    background: "transparent",
+    fontFamily: "inherit",
+    color: a ? c || "#10b981" : "#64748b",
+    borderBottom: a ? `2px solid ${c || "#10b981"}` : "2px solid transparent"
+  }),
+  body: {
+    padding: "20px",
+    maxWidth: "860px",
+    margin: "0 auto"
+  },
+  card: (h, c) => ({
+    background: "#0d1117",
+    border: `1px solid ${h ? c || "#10b981" : "#1a2535"}`,
+    borderRadius: "8px",
+    marginBottom: "10px",
+    overflow: "hidden"
+  }),
+  cHdr: {
+    padding: "15px 16px",
+    cursor: "pointer",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: "12px"
+  },
+  cBdy: {
+    borderTop: "1px solid #1a2535",
+    padding: "16px",
+    background: "#060810"
+  },
+  lbl: {
+    color: "#4895c2",
+    fontSize: "10px",
+    letterSpacing: "2px",
+    marginBottom: "3px"
+  },
+  val: {
+    color: "#cbd5e1",
+    fontSize: "12px"
+  },
+  inp: {
+    background: "#0d1117",
+    border: "1px solid #1a2535",
+    color: "#e2e8f0",
+    padding: "8px 12px",
+    borderRadius: "4px",
+    fontSize: "12px",
+    fontFamily: "inherit",
+    outline: "none",
+    width: "100%"
+  },
+  num: {
+    background: "#0d1117",
+    border: "1px solid #1a2535",
+    color: "#10b981",
+    padding: "7px 10px",
+    borderRadius: "4px",
+    width: "90px",
+    fontSize: "13px",
+    fontFamily: "inherit",
+    outline: "none"
+  },
+  btn: a => ({
+    padding: "7px 16px",
+    background: a ? "#10b981" : "transparent",
+    color: a ? "#000" : "#94a3b8",
+    border: "1px solid",
+    borderColor: a ? "#10b981" : "#1a2535",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "10px",
+    letterSpacing: "2px",
+    fontWeight: 700,
+    fontFamily: "inherit"
+  }),
+  save: {
+    padding: "8px 18px",
+    background: "#10b981",
+    color: "#000",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    fontSize: "10px",
+    letterSpacing: "2px",
+    fontWeight: 700,
+    fontFamily: "inherit",
+    flexShrink: 0
+  },
+  err: {
+    background: "#130a0a",
+    border: "1px solid #450a0a",
+    borderRadius: "6px",
+    padding: "14px",
+    color: "#fca5a5",
+    fontSize: "12px",
+    marginBottom: "16px"
+  },
+  empty: {
+    textAlign: "center",
+    padding: "80px 20px",
+    color: "#94a3b8",
+    fontSize: "12px",
+    letterSpacing: "3px"
+  },
+  fbar: {
+    display: "flex",
+    gap: "6px",
+    marginBottom: "18px",
+    flexWrap: "wrap"
+  },
+  fbtn: (a, c) => ({
+    padding: "5px 12px",
+    fontSize: "10px",
+    letterSpacing: "1px",
+    borderRadius: "3px",
+    border: "1px solid",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    background: a ? c || "#10b981" : "transparent",
+    color: a ? "#000" : "#94a3b8",
+    borderColor: a ? c || "#10b981" : "#1a2535"
+  })
 };
-const SBADGE={new:{bg:"#172554",text:"#93c5fd"},contacted:{bg:"#431407",text:"#fdba74"},scheduled:{bg:"#2e1065",text:"#c4b5fd"},won:{bg:"#052e16",text:"#86efac"},lost:{bg:"#450a0a",text:"#fca5a5"}};
-const QCOL={qualified:"#10b981",needs_review:"#f59e0b",unqualified:"#ef4444"};
-const fmt=n=>n!=null?`$${Number(n).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0})}`:"—";
-const fmtD=d=>d?new Date(d).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"2-digit"}):"—";
-const {useState,useEffect}=React;
-
-// ── Tenant selector (shown when no ?tenant= param) ────────────────────
-function TenantSelector(){
-  return(
-    <div style={{...S.app,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh"}}>
-      <div style={{fontSize:"10px",letterSpacing:"6px",color:"#94a3b8",marginBottom:"40px"}}>SELECT TENANT</div>
-      <div style={{display:"flex",flexDirection:"column",gap:"16px",width:"320px"}}>
-        {Object.values(TENANTS).map(t=>(
-          <a key={t.slug} href={`?tenant=${t.slug}`} style={{textDecoration:"none"}}>
-            <div style={{background:"#0d1117",border:`1px solid ${t.color}22`,borderRadius:"10px",padding:"20px 24px",cursor:"pointer",transition:"border-color 0.2s"}}
-              onMouseEnter={e=>e.currentTarget.style.borderColor=t.color}
-              onMouseLeave={e=>e.currentTarget.style.borderColor=`${t.color}22`}>
-              <div style={{color:t.color,fontSize:"13px",fontWeight:700,letterSpacing:"2px",marginBottom:"6px"}}>{t.name.toUpperCase()}</div>
-              <div style={{color:"#cbd5e1",fontSize:"10px",letterSpacing:"1px"}}>{t.phone}</div>
-            </div>
-          </a>
-        ))}
-      </div>
-      <div style={{marginTop:"48px",fontSize:"10px",color:"#94a3b8",letterSpacing:"2px"}}>AI PROCESS · HVAC BOC</div>
-    </div>
-  );
+const SBADGE = {
+  new: {
+    bg: "#172554",
+    text: "#93c5fd"
+  },
+  contacted: {
+    bg: "#431407",
+    text: "#fdba74"
+  },
+  scheduled: {
+    bg: "#2e1065",
+    text: "#c4b5fd"
+  },
+  won: {
+    bg: "#052e16",
+    text: "#86efac"
+  },
+  lost: {
+    bg: "#450a0a",
+    text: "#fca5a5"
+  }
+};
+const QCOL = {
+  qualified: "#10b981",
+  needs_review: "#f59e0b",
+  unqualified: "#ef4444"
+};
+const fmt = n => n != null ? `$${Number(n).toLocaleString(undefined, {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0
+})}` : "—";
+const fmtD = d => d ? new Date(d).toLocaleDateString("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "2-digit"
+}) : "—";
+const {
+  useState,
+  useEffect
+} = React;
+function TenantSelector() {
+  return _jsxDEV("div", {
+    style: {
+      ...S.app,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "100vh"
+    },
+    children: [_jsxDEV("div", {
+      style: {
+        fontSize: "10px",
+        letterSpacing: "6px",
+        color: "#94a3b8",
+        marginBottom: "40px"
+      },
+      children: "SELECT TENANT"
+    }, void 0, false), _jsxDEV("div", {
+      style: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+        width: "320px"
+      },
+      children: Object.values(TENANTS).map(t => _jsxDEV("a", {
+        href: `?tenant=${t.slug}`,
+        style: {
+          textDecoration: "none"
+        },
+        children: _jsxDEV("div", {
+          style: {
+            background: "#0d1117",
+            border: `1px solid ${t.color}22`,
+            borderRadius: "10px",
+            padding: "20px 24px",
+            cursor: "pointer",
+            transition: "border-color 0.2s"
+          },
+          onMouseEnter: e => e.currentTarget.style.borderColor = t.color,
+          onMouseLeave: e => e.currentTarget.style.borderColor = `${t.color}22`,
+          children: [_jsxDEV("div", {
+            style: {
+              color: t.color,
+              fontSize: "13px",
+              fontWeight: 700,
+              letterSpacing: "2px",
+              marginBottom: "6px"
+            },
+            children: t.name.toUpperCase()
+          }, void 0, false), _jsxDEV("div", {
+            style: {
+              color: "#cbd5e1",
+              fontSize: "10px",
+              letterSpacing: "1px"
+            },
+            children: t.phone
+          }, void 0, false)]
+        }, void 0, true)
+      }, t.slug, false))
+    }, void 0, false), _jsxDEV("div", {
+      style: {
+        marginTop: "48px",
+        fontSize: "10px",
+        color: "#94a3b8",
+        letterSpacing: "2px"
+      },
+      children: "AI PROCESS · HVAC BOC"
+    }, void 0, false)]
+  }, void 0, true);
 }
-
-// ── Main dashboard ────────────────────────────────────────────────────
-function App(){
-  const ac=TENANT?.color||"#10b981";
-  const[tab,setTab]=useState("leads");
-  const[leads,setLeads]=useState([]);
-  const[pricing,setPricing]=useState([]);
-  const[config,setConfig]=useState([]);
-  const[loading,setLoading]=useState(true);
-  const[err,setErr]=useState(null);
-  const[filter,setFilter]=useState("all");
-  const[exp,setExp]=useState(null);
-  const[editP,setEditP]=useState({});
-  const[editC,setEditC]=useState({});
-  const[saving,setSaving]=useState({});
-  const[notifEmail,setNotifEmail]=useState("");
-  const[notifEmailEdit,setNotifEmailEdit]=useState("");
-  const[notifSaving,setNotifSaving]=useState(false);
-
-  const load=async()=>{
-    setLoading(true);setErr(null);
-    try{
-      const leadsP = TENANT_SLUG
-        ? rpc("hvac_get_leads",{p_client_slug:TENANT_SLUG})
-        : rpc("hvac_get_leads");
-      const requests = [leadsP,rpc("hvac_get_pricing"),rpc("hvac_get_config")];
-      if(TENANT_SLUG) requests.push(rpc("hvac_get_client",{p_slug:TENANT_SLUG}));
+function App() {
+  const ac = TENANT?.color || "#10b981";
+  const [tab, setTab] = useState("leads");
+  const [leads, setLeads] = useState([]);
+  const [pricing, setPricing] = useState([]);
+  const [config, setConfig] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState(null);
+  const [filter, setFilter] = useState("all");
+  const [exp, setExp] = useState(null);
+  const [editP, setEditP] = useState({});
+  const [editC, setEditC] = useState({});
+  const [saving, setSaving] = useState({});
+  const [notifEmail, setNotifEmail] = useState("");
+  const [notifEmailEdit, setNotifEmailEdit] = useState("");
+  const [notifSaving, setNotifSaving] = useState(false);
+  const load = async () => {
+    setLoading(true);
+    setErr(null);
+    try {
+      const leadsP = TENANT_SLUG ? rpc("hvac_get_leads", {
+        p_client_slug: TENANT_SLUG
+      }) : rpc("hvac_get_leads");
+      const requests = [leadsP, rpc("hvac_get_pricing"), rpc("hvac_get_config")];
+      if (TENANT_SLUG) requests.push(rpc("hvac_get_client", {
+        p_slug: TENANT_SLUG
+      }));
       const results = await Promise.all(requests);
-      setLeads(results[0]||[]);setPricing(results[1]||[]);setConfig(results[2]||[]);
-      if(TENANT_SLUG && results[3]) { setNotifEmail(results[3].owner_email||""); setDashUrl(results[3].dashboard_url||""); }
-    }catch(e){setErr(e.message)}finally{setLoading(false)}
+      setLeads(results[0] || []);
+      setPricing(results[1] || []);
+      setConfig(results[2] || []);
+      if (TENANT_SLUG && results[3]) {
+        setNotifEmail(results[3].owner_email || "");
+        setDashUrl(results[3].dashboard_url || "");
+      }
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
   };
-  const[dashUrl,setDashUrl]=useState("");
-  const[dashUrlEdit,setDashUrlEdit]=useState("");
-  const[dashSaving,setDashSaving]=useState(false);
-  const saveNotifEmail=async()=>{
-    if(!TENANT_SLUG||!notifEmailEdit) return;
+  const [dashUrl, setDashUrl] = useState("");
+  const [dashUrlEdit, setDashUrlEdit] = useState("");
+  const [dashSaving, setDashSaving] = useState(false);
+  const saveNotifEmail = async () => {
+    if (!TENANT_SLUG || !notifEmailEdit) return;
     setNotifSaving(true);
-    try{
-      await rpc("hvac_update_client_email",{p_slug:TENANT_SLUG,p_email:notifEmailEdit});
-      setNotifEmail(notifEmailEdit);setNotifEmailEdit("");
-    }catch(e){alert(e.message)}finally{setNotifSaving(false)}
+    try {
+      await rpc("hvac_update_client_email", {
+        p_slug: TENANT_SLUG,
+        p_email: notifEmailEdit
+      });
+      setNotifEmail(notifEmailEdit);
+      setNotifEmailEdit("");
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setNotifSaving(false);
+    }
   };
-  const saveDashUrl=async()=>{
-    if(!TENANT_SLUG||!dashUrlEdit) return;
+  const saveDashUrl = async () => {
+    if (!TENANT_SLUG || !dashUrlEdit) return;
     setDashSaving(true);
-    try{
-      await rpc("hvac_update_client_dashboard",{p_slug:TENANT_SLUG,p_url:dashUrlEdit});
-      setDashUrl(dashUrlEdit);setDashUrlEdit("");
-    }catch(e){alert(e.message)}finally{setDashSaving(false)}
+    try {
+      await rpc("hvac_update_client_dashboard", {
+        p_slug: TENANT_SLUG,
+        p_url: dashUrlEdit
+      });
+      setDashUrl(dashUrlEdit);
+      setDashUrlEdit("");
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setDashSaving(false);
+    }
   };
-  useEffect(()=>{load()},[]);
-
-  const setStatus=async(id,status)=>{setSaving(s=>({...s,[id]:true}));try{await rpc("hvac_update_lead_status",{p_id:id,p_status:status});setLeads(ls=>ls.map(l=>l.id===id?{...l,status}:l))}catch(e){alert(e.message)}finally{setSaving(s=>({...s,[id]:false}))}};
-  const saveP=async(row)=>{const k=`p${row.id}`;setSaving(s=>({...s,[k]:true}));try{const e=editP[row.id]||{};await rpc("hvac_update_pricing",{p_id:row.id,p_service_name:e.service_name??row.service_name,p_category:e.category??row.category,p_unit:e.unit??row.unit,p_price_min:parseFloat(e.price_min??row.price_min),p_price_max:parseFloat(e.price_max??row.price_max),p_active:e.active??row.active,p_notes:e.notes??row.notes});setPricing(ps=>ps.map(p=>p.id===row.id?{...p,...e}:p));setEditP(ep=>{const n={...ep};delete n[row.id];return n})}catch(e){alert(e.message)}finally{setSaving(s=>({...s,[k]:false}))}};
-  const saveC=async(key)=>{const k=`c${key}`;setSaving(s=>({...s,[k]:true}));try{const val=editC[key];await rpc("hvac_update_config",{p_key:key,p_value:val});setConfig(cs=>cs.map(c=>c.key===key?{...c,value:val}:c));setEditC(ec=>{const n={...ec};delete n[key];return n})}catch(e){alert(e.message)}finally{setSaving(s=>({...s,[k]:false}))}};
-
-  const filtered=filter==="all"?leads:leads.filter(l=>l.status===filter);
-  const statusCounts=leads.reduce((acc,l)=>{acc[l.status]=(acc[l.status]||0)+1;return acc},{});
-
-  return(
-    <div style={S.app}>
-      <div style={S.hdr}>
-        <div style={{display:"flex",alignItems:"center",gap:"16px"}}>
-          <div>
-            <div style={S.logo(ac)}>▣ {TENANT?TENANT.name.toUpperCase():"HVAC BOC"}</div>
-            <div style={S.sub}>{TENANT?`${TENANT.phone} · `:""}{TENANT_SLUG?.toUpperCase().replace(/_/g," ")||"OPERATIONS CENTER"}</div>
-          </div>
-          {TENANT&&(
-            <a href="/" style={{color:"#94a3b8",fontSize:"10px",textDecoration:"none",letterSpacing:"1px",border:"1px solid #1a2535",padding:"3px 8px",borderRadius:"3px"}}>← ALL</a>
-          )}
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:"10px"}}>
-          <div style={{width:7,height:7,borderRadius:"50%",background:ac,boxShadow:`0 0 10px ${ac}`}}/>
-          <span style={{color:"#94a3b8",fontSize:"10px",letterSpacing:"1px"}}>LIVE</span>
-          <button onClick={load} style={{background:"none",border:"1px solid #1a2535",color:"#cbd5e1",padding:"5px 10px",borderRadius:"4px",fontSize:"10px",cursor:"pointer",letterSpacing:"1px",fontFamily:"inherit"}}>↺ SYNC</button>
-        </div>
-      </div>
-      <div style={S.tabs}>
-        {[["leads",`ORDERS (${leads.length})`],["pricing","PRICING"],["settings","SETTINGS"]].map(([id,lbl])=>(
-          <button key={id} style={S.tab(tab===id,ac)} onClick={()=>setTab(id)}>{lbl}</button>
-        ))}
-      </div>
-      <div style={S.body}>
-        {err&&<div style={S.err}>⚠ {err}</div>}
-        {loading?<div style={S.empty}>LOADING...</div>:(
-          <>
-            {tab==="leads"&&(
-              <>
-                <div style={S.fbar}>
-                  {[["all",`ALL (${leads.length})`],["new",`NEW (${statusCounts.new||0})`],["contacted",`CONTACTED (${statusCounts.contacted||0})`],["scheduled",`SCHEDULED (${statusCounts.scheduled||0})`],["won",`WON (${statusCounts.won||0})`],["lost",`LOST (${statusCounts.lost||0})`]].map(([s,l])=>(
-                    <button key={s} style={S.fbtn(filter===s,ac)} onClick={()=>setFilter(s)}>{l}</button>
-                  ))}
-                </div>
-                {filtered.length===0?<div style={S.empty}>NO ORDERS</div>:filtered.map(lead=>(
-                  <div key={lead.id} style={S.card(exp===lead.id,ac)}>
-                    <div style={S.cHdr} onClick={()=>setExp(exp===lead.id?null:lead.id)}>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={{display:"flex",alignItems:"center",gap:"8px",flexWrap:"wrap",marginBottom:"8px"}}>
-                          <span style={{color:"#e2e8f0",fontWeight:700,fontSize:"14px"}}>{lead.contact_name||"Unknown Caller"}</span>
-                          {SBADGE[lead.status]&&<span style={{fontSize:"10px",letterSpacing:"1px",padding:"2px 8px",borderRadius:"3px",...SBADGE[lead.status]}}>{(lead.status||"new").toUpperCase()}</span>}
-                          <span style={{fontSize:"10px",color:QCOL[lead.qualification_status]||"#64748b"}}>● {(lead.qualification_status||"pending").replace("_"," ").toUpperCase()}</span>
-                          {lead.language&&lead.language!=="en"&&<span style={{fontSize:"10px",color:"#94a3b8"}}>{lead.language==="es"?"🇪🇸":lead.language==="pt"?"🇧🇷":lead.language==="fr"?"🇫🇷":"🌐"}</span>}
-                        </div>
-                        <div style={{display:"flex",gap:"14px",flexWrap:"wrap"}}>
-                          <span style={{color:"#cbd5e1",fontSize:"12px"}}>☎ {lead.phone||"—"}</span>
-                          {lead.availability&&<span style={{color:"#cbd5e1",fontSize:"12px"}}>🕐 {lead.availability}</span>}
-                          {lead.service_requested&&<span style={{color:"#94a3b8",fontSize:"12px"}}>⚡ {lead.service_requested}</span>}
-                          {lead.urgency==="emergency"&&<span style={{color:"#ef4444",fontSize:"10px",letterSpacing:"1px"}}>🚨 EMERGENCY</span>}
-                        </div>
-                      </div>
-                      <div style={{textAlign:"right",flexShrink:0}}>
-                        {lead.estimate_low!=null&&<div style={{color:ac,fontWeight:700,fontSize:"15px"}}>{fmt(lead.estimate_low)}–{fmt(lead.estimate_high)}</div>}
-                        <div style={{color:"#94a3b8",fontSize:"10px",marginTop:"4px"}}>{fmtD(lead.created_at)}</div>
-                        <div style={{color:"#94a3b8",fontSize:"10px",marginTop:"2px"}}>{exp===lead.id?"▲":"▼"}</div>
-                      </div>
-                    </div>
-                    {exp===lead.id&&(
-                      <div style={S.cBdy}>
-                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px",marginBottom:"16px"}}>
-                          {[["PHONE",lead.phone],["URGENCY",lead.urgency],["SOURCE",lead.source],["PROPERTY",lead.property_type||"—"],["AVAILABILITY",lead.availability||"—"],["LANGUAGE",lead.language||"en"],["ESTIMATE",lead.estimate_low!=null?`${fmt(lead.estimate_low)} – ${fmt(lead.estimate_high)}`:"—"],["QUAL NOTE",lead.qualification_reason||"—"]].map(([k,v])=>(
-                            <div key={k}><div style={S.lbl}>{k}</div><div style={S.val}>{v}</div></div>
-                          ))}
-                        </div>
-                        {lead.description&&<div style={{marginBottom:"16px"}}><div style={S.lbl}>DESCRIPTION</div><div style={{...S.val,background:"#0d1117",border:"1px solid #1a2535",padding:"10px",borderRadius:"4px",marginTop:"4px"}}>{lead.description}</div></div>}
-                        <div><div style={{...S.lbl,marginBottom:"8px"}}>UPDATE STATUS</div>
-                          <div style={{display:"flex",gap:"6px",flexWrap:"wrap"}}>
-                            {["new","contacted","scheduled","won","lost"].map(s=>(
-                              <button key={s} disabled={saving[lead.id]} style={S.btn(lead.status===s)} onClick={()=>setStatus(lead.id,s)}>{s.toUpperCase()}</button>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </>
-            )}
-            {tab==="pricing"&&(
-              <>
-                <div style={{color:"#94a3b8",fontSize:"10px",letterSpacing:"3px",marginBottom:"18px"}}>{pricing.length} SERVICES</div>
-                {pricing.map(row=>{
-                  const e=editP[row.id]||{};const dirty=Object.keys(e).length>0;const active=e.active??row.active;
-                  return(
-                    <div key={row.id} style={{...S.card(dirty,ac),padding:"15px 16px",opacity:active?1:0.5}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"12px",gap:"10px"}}>
-                        <div style={{flex:1}}>
-                          <input value={e.service_name??row.service_name} onChange={ev=>setEditP(ep=>({...ep,[row.id]:{...ep[row.id],service_name:ev.target.value}}))} style={{background:"transparent",border:"none",color:"#e2e8f0",fontSize:"14px",fontWeight:700,fontFamily:"inherit",width:"100%",outline:"none",padding:0}}/>
-                          <div style={{color:"#94a3b8",fontSize:"10px",marginTop:"3px",letterSpacing:"1px"}}>{row.service_code} · {e.category??row.category}</div>
-                        </div>
-                        <button onClick={()=>setEditP(ep=>({...ep,[row.id]:{...ep[row.id],active:!active}}))} style={{padding:"4px 10px",fontSize:"10px",border:"1px solid",borderRadius:"3px",cursor:"pointer",fontFamily:"inherit",letterSpacing:"1px",background:active?"#052e16":"#1c1917",color:active?"#86efac":"#57534e",borderColor:active?"#166534":"#292524"}}>{active?"ACTIVE":"PAUSED"}</button>
-                      </div>
-                      <div style={{display:"flex",alignItems:"flex-end",gap:"10px",flexWrap:"wrap"}}>
-                        <div><div style={S.lbl}>MIN $</div><input type="number" style={S.num} value={e.price_min??row.price_min} onChange={ev=>setEditP(ep=>({...ep,[row.id]:{...ep[row.id],price_min:ev.target.value}}))}/></div>
-                        <div style={{color:"#1a2535",marginBottom:"8px"}}>—</div>
-                        <div><div style={S.lbl}>MAX $</div><input type="number" style={S.num} value={e.price_max??row.price_max} onChange={ev=>setEditP(ep=>({...ep,[row.id]:{...ep[row.id],price_max:ev.target.value}}))}/></div>
-                        {dirty&&<button style={{...S.save,opacity:saving[`p${row.id}`]?0.5:1}} disabled={saving[`p${row.id}`]} onClick={()=>saveP(row)}>{saving[`p${row.id}`]?"...":"SAVE"}</button>}
-                      </div>
-                    </div>
-                  );
-                })}
-              </>
-            )}
-            {tab==="settings"&&(
-              <>
-                <div style={{color:"#94a3b8",fontSize:"10px",letterSpacing:"3px",marginBottom:"18px"}}>SYSTEM CONFIGURATION</div>
-                {TENANT_SLUG&&(
-                  <div style={{...S.card(notifEmailEdit!=="",ac),padding:"15px 16px",marginBottom:"10px"}}>
-                    <div style={{...S.lbl,marginBottom:"4px"}}>NOTIFICATION EMAIL</div>
-                    <div style={{color:"#94a3b8",fontSize:"11px",marginBottom:"8px"}}>Lead confirmation emails are sent to this address after every call.</div>
-                    <div style={{color:"#cbd5e1",fontSize:"12px",marginBottom:"8px"}}>Current: <strong style={{color:"#e2e8f0"}}>{notifEmail||"—"}</strong></div>
-                    <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
-                      <input style={S.inp} value={notifEmailEdit} onChange={ev=>setNotifEmailEdit(ev.target.value)} placeholder="Enter new email address..."/>
-                      {notifEmailEdit&&<button style={{...S.save,background:ac,opacity:notifSaving?0.5:1}} disabled={notifSaving} onClick={saveNotifEmail}>{notifSaving?"...":"SAVE"}</button>}
-                    </div>
-                    <div style={{color:"#94a3b8",fontSize:"10px",marginTop:"6px",letterSpacing:"1px"}}>CHANGES TAKE EFFECT IMMEDIATELY</div>
-                  </div>
-                )}
-                {TENANT_SLUG&&(
-                  <div style={{...S.card(dashUrlEdit!=="",ac),padding:"15px 16px",marginBottom:"10px"}}>
-                    <div style={{...S.lbl,marginBottom:"4px"}}>DASHBOARD URL</div>
-                    <div style={{color:"#94a3b8",fontSize:"11px",marginBottom:"8px"}}>The "View Dashboard" link included in every lead confirmation email.</div>
-                    <div style={{color:"#cbd5e1",fontSize:"12px",marginBottom:"8px"}}>Current: <strong style={{color:"#e2e8f0",wordBreak:"break-all"}}>{dashUrl||"—"}</strong></div>
-                    <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
-                      <input style={S.inp} value={dashUrlEdit} onChange={ev=>setDashUrlEdit(ev.target.value)} placeholder="https://..."/>
-                      {dashUrlEdit&&<button style={{...S.save,background:ac,opacity:dashSaving?0.5:1}} disabled={dashSaving} onClick={saveDashUrl}>{dashSaving?"...":"SAVE"}</button>}
-                    </div>
-                  </div>
-                )}
-                {config.map(row=>{
-
-                  const dirty=editC[row.key]!==undefined;
-                  return(
-                    <div key={row.key} style={{...S.card(dirty,ac),padding:"15px 16px",marginBottom:"10px"}}>
-                      <div style={{...S.lbl,marginBottom:"4px"}}>{row.key.toUpperCase().replace(/_/g," ")}</div>
-                      {row.description&&<div style={{color:"#94a3b8",fontSize:"11px",marginBottom:"8px"}}>{row.description}</div>}
-                      <div style={{display:"flex",gap:"10px",alignItems:"center"}}>
-                        <input style={S.inp} value={dirty?editC[row.key]:(row.value||"")} onChange={ev=>setEditC(ec=>({...ec,[row.key]:ev.target.value}))} placeholder={`Enter ${row.key}...`}/>
-                        {dirty&&<button style={{...S.save,opacity:saving[`c${row.key}`]?0.5:1}} disabled={saving[`c${row.key}`]} onClick={()=>saveC(row.key)}>{saving[`c${row.key}`]?"...":"SAVE"}</button>}
-                      </div>
-                      <div style={{color:"#94a3b8",fontSize:"10px",marginTop:"6px",letterSpacing:"1px"}}>UPDATED {new Date(row.updated_at).toLocaleString()}</div>
-                    </div>
-                  );
-                })}
-              </>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
+  useEffect(() => {
+    load();
+  }, []);
+  const setStatus = async (id, status) => {
+    setSaving(s => ({
+      ...s,
+      [id]: true
+    }));
+    try {
+      await rpc("hvac_update_lead_status", {
+        p_id: id,
+        p_status: status
+      });
+      setLeads(ls => ls.map(l => l.id === id ? {
+        ...l,
+        status
+      } : l));
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setSaving(s => ({
+        ...s,
+        [id]: false
+      }));
+    }
+  };
+  const saveP = async row => {
+    const k = `p${row.id}`;
+    setSaving(s => ({
+      ...s,
+      [k]: true
+    }));
+    try {
+      const e = editP[row.id] || {};
+      await rpc("hvac_update_pricing", {
+        p_id: row.id,
+        p_service_name: e.service_name ?? row.service_name,
+        p_category: e.category ?? row.category,
+        p_unit: e.unit ?? row.unit,
+        p_price_min: parseFloat(e.price_min ?? row.price_min),
+        p_price_max: parseFloat(e.price_max ?? row.price_max),
+        p_active: e.active ?? row.active,
+        p_notes: e.notes ?? row.notes
+      });
+      setPricing(ps => ps.map(p => p.id === row.id ? {
+        ...p,
+        ...e
+      } : p));
+      setEditP(ep => {
+        const n = {
+          ...ep
+        };
+        delete n[row.id];
+        return n;
+      });
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setSaving(s => ({
+        ...s,
+        [k]: false
+      }));
+    }
+  };
+  const saveC = async key => {
+    const k = `c${key}`;
+    setSaving(s => ({
+      ...s,
+      [k]: true
+    }));
+    try {
+      const val = editC[key];
+      await rpc("hvac_update_config", {
+        p_key: key,
+        p_value: val
+      });
+      setConfig(cs => cs.map(c => c.key === key ? {
+        ...c,
+        value: val
+      } : c));
+      setEditC(ec => {
+        const n = {
+          ...ec
+        };
+        delete n[key];
+        return n;
+      });
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setSaving(s => ({
+        ...s,
+        [k]: false
+      }));
+    }
+  };
+  const filtered = filter === "all" ? leads : leads.filter(l => l.status === filter);
+  const statusCounts = leads.reduce((acc, l) => {
+    acc[l.status] = (acc[l.status] || 0) + 1;
+    return acc;
+  }, {});
+  return _jsxDEV("div", {
+    style: S.app,
+    children: [_jsxDEV("div", {
+      style: S.hdr,
+      children: [_jsxDEV("div", {
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: "16px"
+        },
+        children: [_jsxDEV("div", {
+          children: [_jsxDEV("div", {
+            style: S.logo(ac),
+            children: ["▣ ", TENANT ? TENANT.name.toUpperCase() : "HVAC BOC"]
+          }, void 0, true), _jsxDEV("div", {
+            style: S.sub,
+            children: [TENANT ? `${TENANT.phone} · ` : "", TENANT_SLUG?.toUpperCase().replace(/_/g, " ") || "OPERATIONS CENTER"]
+          }, void 0, true)]
+        }, void 0, true), TENANT && _jsxDEV("a", {
+          href: "/",
+          style: {
+            color: "#94a3b8",
+            fontSize: "10px",
+            textDecoration: "none",
+            letterSpacing: "1px",
+            border: "1px solid #1a2535",
+            padding: "3px 8px",
+            borderRadius: "3px"
+          },
+          children: "← ALL"
+        }, void 0, false)]
+      }, void 0, true), _jsxDEV("div", {
+        style: {
+          display: "flex",
+          alignItems: "center",
+          gap: "10px"
+        },
+        children: [_jsxDEV("div", {
+          style: {
+            width: 7,
+            height: 7,
+            borderRadius: "50%",
+            background: ac,
+            boxShadow: `0 0 10px ${ac}`
+          }
+        }, void 0, false), _jsxDEV("span", {
+          style: {
+            color: "#94a3b8",
+            fontSize: "10px",
+            letterSpacing: "1px"
+          },
+          children: "LIVE"
+        }, void 0, false), _jsxDEV("button", {
+          onClick: load,
+          style: {
+            background: "none",
+            border: "1px solid #1a2535",
+            color: "#cbd5e1",
+            padding: "5px 10px",
+            borderRadius: "4px",
+            fontSize: "10px",
+            cursor: "pointer",
+            letterSpacing: "1px",
+            fontFamily: "inherit"
+          },
+          children: "↺ SYNC"
+        }, void 0, false)]
+      }, void 0, true)]
+    }, void 0, true), _jsxDEV("div", {
+      style: S.tabs,
+      children: [["leads", `ORDERS (${leads.length})`], ["pricing", "PRICING"], ["settings", "SETTINGS"]].map(([id, lbl]) => _jsxDEV("button", {
+        style: S.tab(tab === id, ac),
+        onClick: () => setTab(id),
+        children: lbl
+      }, id, false))
+    }, void 0, false), _jsxDEV("div", {
+      style: S.body,
+      children: [err && _jsxDEV("div", {
+        style: S.err,
+        children: ["⚠ ", err]
+      }, void 0, true), loading ? _jsxDEV("div", {
+        style: S.empty,
+        children: "LOADING..."
+      }, void 0, false) : _jsxDEV(_Fragment, {
+        children: [tab === "leads" && _jsxDEV(_Fragment, {
+          children: [_jsxDEV("div", {
+            style: S.fbar,
+            children: [["all", `ALL (${leads.length})`], ["new", `NEW (${statusCounts.new || 0})`], ["contacted", `CONTACTED (${statusCounts.contacted || 0})`], ["scheduled", `SCHEDULED (${statusCounts.scheduled || 0})`], ["won", `WON (${statusCounts.won || 0})`], ["lost", `LOST (${statusCounts.lost || 0})`]].map(([s, l]) => _jsxDEV("button", {
+              style: S.fbtn(filter === s, ac),
+              onClick: () => setFilter(s),
+              children: l
+            }, s, false))
+          }, void 0, false), filtered.length === 0 ? _jsxDEV("div", {
+            style: S.empty,
+            children: "NO ORDERS"
+          }, void 0, false) : filtered.map(lead => _jsxDEV("div", {
+            style: S.card(exp === lead.id, ac),
+            children: [_jsxDEV("div", {
+              style: S.cHdr,
+              onClick: () => setExp(exp === lead.id ? null : lead.id),
+              children: [_jsxDEV("div", {
+                style: {
+                  flex: 1,
+                  minWidth: 0
+                },
+                children: [_jsxDEV("div", {
+                  style: {
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    flexWrap: "wrap",
+                    marginBottom: "8px"
+                  },
+                  children: [_jsxDEV("span", {
+                    style: {
+                      color: "#e2e8f0",
+                      fontWeight: 700,
+                      fontSize: "14px"
+                    },
+                    children: lead.contact_name || "Unknown Caller"
+                  }, void 0, false), SBADGE[lead.status] && _jsxDEV("span", {
+                    style: {
+                      fontSize: "10px",
+                      letterSpacing: "1px",
+                      padding: "2px 8px",
+                      borderRadius: "3px",
+                      ...SBADGE[lead.status]
+                    },
+                    children: (lead.status || "new").toUpperCase()
+                  }, void 0, false), _jsxDEV("span", {
+                    style: {
+                      fontSize: "10px",
+                      color: QCOL[lead.qualification_status] || "#64748b"
+                    },
+                    children: ["● ", (lead.qualification_status || "pending").replace("_", " ").toUpperCase()]
+                  }, void 0, true), lead.language && lead.language !== "en" && _jsxDEV("span", {
+                    style: {
+                      fontSize: "10px",
+                      color: "#94a3b8"
+                    },
+                    children: lead.language === "es" ? "🇪🇸" : lead.language === "pt" ? "🇧🇷" : lead.language === "fr" ? "🇫🇷" : "🌐"
+                  }, void 0, false)]
+                }, void 0, true), _jsxDEV("div", {
+                  style: {
+                    display: "flex",
+                    gap: "14px",
+                    flexWrap: "wrap"
+                  },
+                  children: [_jsxDEV("span", {
+                    style: {
+                      color: "#cbd5e1",
+                      fontSize: "12px"
+                    },
+                    children: ["☎ ", lead.phone || "—"]
+                  }, void 0, true), lead.availability && _jsxDEV("span", {
+                    style: {
+                      color: "#cbd5e1",
+                      fontSize: "12px"
+                    },
+                    children: ["🕐 ", lead.availability]
+                  }, void 0, true), lead.service_requested && _jsxDEV("span", {
+                    style: {
+                      color: "#94a3b8",
+                      fontSize: "12px"
+                    },
+                    children: ["⚡ ", lead.service_requested]
+                  }, void 0, true), lead.urgency === "emergency" && _jsxDEV("span", {
+                    style: {
+                      color: "#ef4444",
+                      fontSize: "10px",
+                      letterSpacing: "1px"
+                    },
+                    children: "🚨 EMERGENCY"
+                  }, void 0, false)]
+                }, void 0, true)]
+              }, void 0, true), _jsxDEV("div", {
+                style: {
+                  textAlign: "right",
+                  flexShrink: 0
+                },
+                children: [lead.estimate_low != null && _jsxDEV("div", {
+                  style: {
+                    color: ac,
+                    fontWeight: 700,
+                    fontSize: "15px"
+                  },
+                  children: [fmt(lead.estimate_low), "–", fmt(lead.estimate_high)]
+                }, void 0, true), _jsxDEV("div", {
+                  style: {
+                    color: "#94a3b8",
+                    fontSize: "10px",
+                    marginTop: "4px"
+                  },
+                  children: fmtD(lead.created_at)
+                }, void 0, false), _jsxDEV("div", {
+                  style: {
+                    color: "#94a3b8",
+                    fontSize: "10px",
+                    marginTop: "2px"
+                  },
+                  children: exp === lead.id ? "▲" : "▼"
+                }, void 0, false)]
+              }, void 0, true)]
+            }, void 0, true), exp === lead.id && _jsxDEV("div", {
+              style: S.cBdy,
+              children: [_jsxDEV("div", {
+                style: {
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  gap: "14px",
+                  marginBottom: "16px"
+                },
+                children: [["PHONE", lead.phone], ["URGENCY", lead.urgency], ["SOURCE", lead.source], ["PROPERTY", lead.property_type || "—"], ["AVAILABILITY", lead.availability || "—"], ["LANGUAGE", lead.language || "en"], ["ESTIMATE", lead.estimate_low != null ? `${fmt(lead.estimate_low)} – ${fmt(lead.estimate_high)}` : "—"], ["QUAL NOTE", lead.qualification_reason || "—"]].map(([k, v]) => _jsxDEV("div", {
+                  children: [_jsxDEV("div", {
+                    style: S.lbl,
+                    children: k
+                  }, void 0, false), _jsxDEV("div", {
+                    style: S.val,
+                    children: v
+                  }, void 0, false)]
+                }, k, true))
+              }, void 0, false), lead.description && _jsxDEV("div", {
+                style: {
+                  marginBottom: "16px"
+                },
+                children: [_jsxDEV("div", {
+                  style: S.lbl,
+                  children: "DESCRIPTION"
+                }, void 0, false), _jsxDEV("div", {
+                  style: {
+                    ...S.val,
+                    background: "#0d1117",
+                    border: "1px solid #1a2535",
+                    padding: "10px",
+                    borderRadius: "4px",
+                    marginTop: "4px"
+                  },
+                  children: lead.description
+                }, void 0, false)]
+              }, void 0, true), _jsxDEV("div", {
+                children: [_jsxDEV("div", {
+                  style: {
+                    ...S.lbl,
+                    marginBottom: "8px"
+                  },
+                  children: "UPDATE STATUS"
+                }, void 0, false), _jsxDEV("div", {
+                  style: {
+                    display: "flex",
+                    gap: "6px",
+                    flexWrap: "wrap"
+                  },
+                  children: ["new", "contacted", "scheduled", "won", "lost"].map(s => _jsxDEV("button", {
+                    disabled: saving[lead.id],
+                    style: S.btn(lead.status === s),
+                    onClick: () => setStatus(lead.id, s),
+                    children: s.toUpperCase()
+                  }, s, false))
+                }, void 0, false)]
+              }, void 0, true)]
+            }, void 0, true)]
+          }, lead.id, true))]
+        }, void 0, true), tab === "pricing" && _jsxDEV(_Fragment, {
+          children: [_jsxDEV("div", {
+            style: {
+              color: "#94a3b8",
+              fontSize: "10px",
+              letterSpacing: "3px",
+              marginBottom: "18px"
+            },
+            children: [pricing.length, " SERVICES"]
+          }, void 0, true), pricing.map(row => {
+            const e = editP[row.id] || {};
+            const dirty = Object.keys(e).length > 0;
+            const active = e.active ?? row.active;
+            return _jsxDEV("div", {
+              style: {
+                ...S.card(dirty, ac),
+                padding: "15px 16px",
+                opacity: active ? 1 : 0.5
+              },
+              children: [_jsxDEV("div", {
+                style: {
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  marginBottom: "12px",
+                  gap: "10px"
+                },
+                children: [_jsxDEV("div", {
+                  style: {
+                    flex: 1
+                  },
+                  children: [_jsxDEV("input", {
+                    value: e.service_name ?? row.service_name,
+                    onChange: ev => setEditP(ep => ({
+                      ...ep,
+                      [row.id]: {
+                        ...ep[row.id],
+                        service_name: ev.target.value
+                      }
+                    })),
+                    style: {
+                      background: "transparent",
+                      border: "none",
+                      color: "#e2e8f0",
+                      fontSize: "14px",
+                      fontWeight: 700,
+                      fontFamily: "inherit",
+                      width: "100%",
+                      outline: "none",
+                      padding: 0
+                    }
+                  }, void 0, false), _jsxDEV("div", {
+                    style: {
+                      color: "#94a3b8",
+                      fontSize: "10px",
+                      marginTop: "3px",
+                      letterSpacing: "1px"
+                    },
+                    children: [row.service_code, " · ", e.category ?? row.category]
+                  }, void 0, true)]
+                }, void 0, true), _jsxDEV("button", {
+                  onClick: () => setEditP(ep => ({
+                    ...ep,
+                    [row.id]: {
+                      ...ep[row.id],
+                      active: !active
+                    }
+                  })),
+                  style: {
+                    padding: "4px 10px",
+                    fontSize: "10px",
+                    border: "1px solid",
+                    borderRadius: "3px",
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                    letterSpacing: "1px",
+                    background: active ? "#052e16" : "#1c1917",
+                    color: active ? "#86efac" : "#57534e",
+                    borderColor: active ? "#166534" : "#292524"
+                  },
+                  children: active ? "ACTIVE" : "PAUSED"
+                }, void 0, false)]
+              }, void 0, true), _jsxDEV("div", {
+                style: {
+                  display: "flex",
+                  alignItems: "flex-end",
+                  gap: "10px",
+                  flexWrap: "wrap"
+                },
+                children: [_jsxDEV("div", {
+                  children: [_jsxDEV("div", {
+                    style: S.lbl,
+                    children: "MIN $"
+                  }, void 0, false), _jsxDEV("input", {
+                    type: "number",
+                    style: S.num,
+                    value: e.price_min ?? row.price_min,
+                    onChange: ev => setEditP(ep => ({
+                      ...ep,
+                      [row.id]: {
+                        ...ep[row.id],
+                        price_min: ev.target.value
+                      }
+                    }))
+                  }, void 0, false)]
+                }, void 0, true), _jsxDEV("div", {
+                  style: {
+                    color: "#1a2535",
+                    marginBottom: "8px"
+                  },
+                  children: "—"
+                }, void 0, false), _jsxDEV("div", {
+                  children: [_jsxDEV("div", {
+                    style: S.lbl,
+                    children: "MAX $"
+                  }, void 0, false), _jsxDEV("input", {
+                    type: "number",
+                    style: S.num,
+                    value: e.price_max ?? row.price_max,
+                    onChange: ev => setEditP(ep => ({
+                      ...ep,
+                      [row.id]: {
+                        ...ep[row.id],
+                        price_max: ev.target.value
+                      }
+                    }))
+                  }, void 0, false)]
+                }, void 0, true), dirty && _jsxDEV("button", {
+                  style: {
+                    ...S.save,
+                    opacity: saving[`p${row.id}`] ? 0.5 : 1
+                  },
+                  disabled: saving[`p${row.id}`],
+                  onClick: () => saveP(row),
+                  children: saving[`p${row.id}`] ? "..." : "SAVE"
+                }, void 0, false)]
+              }, void 0, true)]
+            }, row.id, true);
+          })]
+        }, void 0, true), tab === "settings" && _jsxDEV(_Fragment, {
+          children: [_jsxDEV("div", {
+            style: {
+              color: "#94a3b8",
+              fontSize: "10px",
+              letterSpacing: "3px",
+              marginBottom: "18px"
+            },
+            children: "SYSTEM CONFIGURATION"
+          }, void 0, false), TENANT_SLUG && _jsxDEV("div", {
+            style: {
+              ...S.card(notifEmailEdit !== "", ac),
+              padding: "15px 16px",
+              marginBottom: "10px"
+            },
+            children: [_jsxDEV("div", {
+              style: {
+                ...S.lbl,
+                marginBottom: "4px"
+              },
+              children: "NOTIFICATION EMAIL"
+            }, void 0, false), _jsxDEV("div", {
+              style: {
+                color: "#94a3b8",
+                fontSize: "11px",
+                marginBottom: "8px"
+              },
+              children: "Lead confirmation emails are sent to this address after every call."
+            }, void 0, false), _jsxDEV("div", {
+              style: {
+                color: "#cbd5e1",
+                fontSize: "12px",
+                marginBottom: "8px"
+              },
+              children: ["Current: ", _jsxDEV("strong", {
+                style: {
+                  color: "#e2e8f0"
+                },
+                children: notifEmail || "—"
+              }, void 0, false)]
+            }, void 0, true), _jsxDEV("div", {
+              style: {
+                display: "flex",
+                gap: "10px",
+                alignItems: "center"
+              },
+              children: [_jsxDEV("input", {
+                style: S.inp,
+                value: notifEmailEdit,
+                onChange: ev => setNotifEmailEdit(ev.target.value),
+                placeholder: "Enter new email address..."
+              }, void 0, false), notifEmailEdit && _jsxDEV("button", {
+                style: {
+                  ...S.save,
+                  background: ac,
+                  opacity: notifSaving ? 0.5 : 1
+                },
+                disabled: notifSaving,
+                onClick: saveNotifEmail,
+                children: notifSaving ? "..." : "SAVE"
+              }, void 0, false)]
+            }, void 0, true), _jsxDEV("div", {
+              style: {
+                color: "#94a3b8",
+                fontSize: "10px",
+                marginTop: "6px",
+                letterSpacing: "1px"
+              },
+              children: "CHANGES TAKE EFFECT IMMEDIATELY"
+            }, void 0, false)]
+          }, void 0, true), TENANT_SLUG && _jsxDEV("div", {
+            style: {
+              ...S.card(dashUrlEdit !== "", ac),
+              padding: "15px 16px",
+              marginBottom: "10px"
+            },
+            children: [_jsxDEV("div", {
+              style: {
+                ...S.lbl,
+                marginBottom: "4px"
+              },
+              children: "DASHBOARD URL"
+            }, void 0, false), _jsxDEV("div", {
+              style: {
+                color: "#94a3b8",
+                fontSize: "11px",
+                marginBottom: "8px"
+              },
+              children: "The \"View Dashboard\" link included in every lead confirmation email."
+            }, void 0, false), _jsxDEV("div", {
+              style: {
+                color: "#cbd5e1",
+                fontSize: "12px",
+                marginBottom: "8px"
+              },
+              children: ["Current: ", _jsxDEV("strong", {
+                style: {
+                  color: "#e2e8f0",
+                  wordBreak: "break-all"
+                },
+                children: dashUrl || "—"
+              }, void 0, false)]
+            }, void 0, true), _jsxDEV("div", {
+              style: {
+                display: "flex",
+                gap: "10px",
+                alignItems: "center"
+              },
+              children: [_jsxDEV("input", {
+                style: S.inp,
+                value: dashUrlEdit,
+                onChange: ev => setDashUrlEdit(ev.target.value),
+                placeholder: "https://..."
+              }, void 0, false), dashUrlEdit && _jsxDEV("button", {
+                style: {
+                  ...S.save,
+                  background: ac,
+                  opacity: dashSaving ? 0.5 : 1
+                },
+                disabled: dashSaving,
+                onClick: saveDashUrl,
+                children: dashSaving ? "..." : "SAVE"
+              }, void 0, false)]
+            }, void 0, true)]
+          }, void 0, true), config.map(row => {
+            const dirty = editC[row.key] !== undefined;
+            return _jsxDEV("div", {
+              style: {
+                ...S.card(dirty, ac),
+                padding: "15px 16px",
+                marginBottom: "10px"
+              },
+              children: [_jsxDEV("div", {
+                style: {
+                  ...S.lbl,
+                  marginBottom: "4px"
+                },
+                children: row.key.toUpperCase().replace(/_/g, " ")
+              }, void 0, false), row.description && _jsxDEV("div", {
+                style: {
+                  color: "#94a3b8",
+                  fontSize: "11px",
+                  marginBottom: "8px"
+                },
+                children: row.description
+              }, void 0, false), _jsxDEV("div", {
+                style: {
+                  display: "flex",
+                  gap: "10px",
+                  alignItems: "center"
+                },
+                children: [_jsxDEV("input", {
+                  style: S.inp,
+                  value: dirty ? editC[row.key] : row.value || "",
+                  onChange: ev => setEditC(ec => ({
+                    ...ec,
+                    [row.key]: ev.target.value
+                  })),
+                  placeholder: `Enter ${row.key}...`
+                }, void 0, false), dirty && _jsxDEV("button", {
+                  style: {
+                    ...S.save,
+                    opacity: saving[`c${row.key}`] ? 0.5 : 1
+                  },
+                  disabled: saving[`c${row.key}`],
+                  onClick: () => saveC(row.key),
+                  children: saving[`c${row.key}`] ? "..." : "SAVE"
+                }, void 0, false)]
+              }, void 0, true), _jsxDEV("div", {
+                style: {
+                  color: "#94a3b8",
+                  fontSize: "10px",
+                  marginTop: "6px",
+                  letterSpacing: "1px"
+                },
+                children: ["UPDATED ", new Date(row.updated_at).toLocaleString()]
+              }, void 0, true)]
+            }, row.key, true);
+          })]
+        }, void 0, true)]
+      }, void 0, true)]
+    }, void 0, true)]
+  }, void 0, true);
 }
-
-// ── Entry point ───────────────────────────────────────────────────────
-function Root(){
-  if(!TENANT_SLUG || !TENANTS[TENANT_SLUG]) return <TenantSelector/>;
-  return <App/>;
+function Root() {
+  if (!TENANT_SLUG || !TENANTS[TENANT_SLUG]) return _jsxDEV(TenantSelector, {}, void 0, false);
+  return _jsxDEV(App, {}, void 0, false);
 }
-ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+ReactDOM.createRoot(document.getElementById('root')).render(_jsxDEV(Root, {}, void 0, false));
 </script>
 </body>
 </html>
