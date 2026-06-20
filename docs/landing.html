@@ -562,6 +562,17 @@ function unlockDemo() {
     body: JSON.stringify({ email, company: name, source: 'landing_page', timestamp: new Date().toISOString() })
   }).catch(() => {});
 
+  // Pass the prospect's email to the AI agent as dynamic variables
+  // (n8n reads prospect_email + source==='website_demo' to route the lead email to THEM, not the fallback inbox)
+  var widget = document.querySelector('elevenlabs-convai');
+  if (widget) {
+    widget.setAttribute('dynamic-variables', JSON.stringify({
+      prospect_email: email,
+      prospect_company: name || '',
+      source: 'website_demo'
+    }));
+  }
+
   // Show widget
   document.getElementById('reg-form').style.display = 'none';
   document.getElementById('widget-area').style.display = 'block';
